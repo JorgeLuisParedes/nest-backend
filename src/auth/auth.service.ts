@@ -9,12 +9,11 @@ import { Model } from 'mongoose';
 
 import * as bcryptjs from 'bcryptjs';
 
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
 import { User } from './entities/user.entity';
-import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from './interfaces/jwt-payload';
+import { CreateUserDto, LoginDto, UpdateAuthDto, RegisterUserDto } from './dto';
+import { LoginResponse } from './interfaces/login-response';
 
 @Injectable()
 export class AuthService {
@@ -36,8 +35,6 @@ export class AuthService {
 			const { password: _, ...user } = newUser.toJSON();
 
 			return user;
-			// 2- Guardar el usuario
-			// 3- Generar el JWT
 		} catch (error) {
 			if (error.code === 11000) {
 				throw new BadRequestException(
@@ -48,6 +45,14 @@ export class AuthService {
 				'Something terrible happend'
 			);
 		}
+	}
+
+	async register(registerDto: RegisterUserDto): Promise<LoginResponse> {
+		const user = await this.create(registerDto);
+		return {
+			user: user,
+			token: this.getJWToken({ id: user._id }),
+		};
 	}
 
 	async login(loginDto: LoginDto) {
